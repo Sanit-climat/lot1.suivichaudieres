@@ -89,6 +89,38 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 .form-group input,.form-group select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);transition:border .2s}
 .form-group input:focus,.form-group select:focus{border-color:var(--secondary)}
 .chaudiere-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#e8f4fd;color:var(--primary)}
+/* LOCATAIRES TABLE MODERNE */
+.loc-table-wrap{background:var(--white);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.loc-table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.loc-table-header h2{font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.loc-table{width:100%;border-collapse:collapse;font-size:13px}
+.loc-table thead th{background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+.loc-table tbody tr{border-bottom:1px solid #f1f5f9;transition:background .15s}
+.loc-table tbody tr:hover{background:#f8fafc}
+.loc-table tbody tr:last-child{border-bottom:none}
+.loc-table td{padding:12px 14px;vertical-align:middle}
+.loc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;margin-right:10px}
+.loc-cell-name{display:flex;align-items:center}
+.loc-name{font-weight:700;font-size:13px;color:var(--text);line-height:1.3}
+.loc-phone{font-size:11px;color:#94a3b8;margin-top:2px}
+.loc-res-name{font-weight:600;font-size:12px;color:var(--text)}
+.loc-res-city{font-size:11px;color:#94a3b8;margin-top:1px}
+.loc-status-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.loc-status-pending{background:#fef3c7;color:#d97706}
+.loc-status-done{background:#d1fae5;color:#059669}
+.loc-action-btn{padding:5px 12px;border:1px solid var(--border);background:var(--white);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);transition:all .2s}
+.loc-action-btn:hover{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.loc-delete-btn{padding:5px 8px;border:none;background:none;cursor:pointer;color:#cbd5e1;font-size:14px;transition:color .2s;margin-left:4px}
+.loc-delete-btn:hover{color:var(--danger)}
+/* MODAL LOCATAIRE REDESIGN */
+.loc-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+.loc-modal-grid .full{grid-column:1/-1}
+.loc-modal-section{margin-bottom:4px}
+.loc-modal-section-title{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field label{font-size:12px;font-weight:600;color:#475569}
+.form-field input,.form-field select{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--text);transition:border .2s}
+.form-field input:focus,.form-field select:focus{border-color:var(--secondary)}
 .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;align-items:center;justify-content:center}
 .confirm-overlay.open{display:flex}
 .confirm-box{background:var(--white);border-radius:14px;padding:28px 32px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25);text-align:center}
@@ -212,16 +244,19 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 
   <!-- LOCATAIRES -->
   <div id="tab-locataires" class="tab-panel">
-    <div class="toolbar">
-      <div class="search-bar" style="margin-bottom:0;flex:1">
-        <input type="text" id="locSearchInput" placeholder="🔍 Rechercher locataire, référence, résidence..." oninput="renderLocatairesTable()">
-        <select id="locFilterRes" onchange="renderLocatairesTable()">
-          <option value="">Toutes les résidences</option>
-        </select>
+    <div class="loc-table-wrap">
+      <div class="loc-table-header">
+        <h2>👤 Locataires</h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="locSearchInput" placeholder="🔍 Rechercher..." oninput="renderLocatairesTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;min-width:220px">
+          <select id="locFilterRes" onchange="renderLocatairesTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="">Toutes les résidences</option>
+          </select>
+          <button class="btn-add" onclick="openLocModal()">+ Ajouter un locataire</button>
+        </div>
       </div>
-      <button class="btn-add" onclick="openLocModal()">➕ Ajouter locataire</button>
+      <div id="locatairesTableContainer"></div>
     </div>
-    <div id="locatairesTableContainer"></div>
   </div>
 
   <!-- CHAUDIERES -->
@@ -233,6 +268,7 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
           <option value="">Toutes les résidences</option>
         </select>
       </div>
+      <button class="btn-add" onclick="openChaudModal()" style="margin-left:10px">➕ Ajouter chaudière</button>
     </div>
     <div id="chaudieresTableContainer"></div>
   </div>
@@ -281,77 +317,133 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 
 <!-- MODAL LOCATAIRE (CRUD) -->
 <div class="modal-overlay" id="locModalOverlay">
-<div class="modal modal-lg">
-  <h3 id="locModalTitle">👤 Nouveau locataire</h3>
-  <div class="modal-form">
-    <div class="form-group full">
-      <label>Résidence *</label>
+<div class="modal modal-lg" style="max-width:680px;width:96%">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h3 id="locModalTitle" style="margin-bottom:0">👤 Nouveau locataire</h3>
+    <button onclick="closeLocModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;padding:4px 8px">✕</button>
+  </div>
+
+  <div class="loc-modal-grid">
+    <!-- Ligne 1: Prénom / Nom -->
+    <div class="form-field">
+      <label>PRÉNOM *</label>
+      <input type="text" id="locPrenom" placeholder="Ex: HAMIDOUNI">
+    </div>
+    <div class="form-field">
+      <label>NOM *</label>
+      <input type="text" id="locNom" placeholder="Ex: STOIFAHATI AZDA AHMED">
+    </div>
+
+    <!-- Ligne 2: Résidence / N° Appart -->
+    <div class="form-field">
+      <label>RÉSIDENCE *</label>
       <select id="locResIdx" onchange="updateLocRef()"></select>
     </div>
-    <div class="form-group">
-      <label>Nom *</label>
-      <input type="text" id="locNom" placeholder="NOM Prénom">
+    <div class="form-field">
+      <label>N° APPARTEMENT</label>
+      <input type="text" id="locAppart" placeholder="Ex: Bât A3 – Ét 0 – N°249 (T3)" readonly style="background:#f8fafc;color:#64748b">
     </div>
-    <div class="form-group">
-      <label>Référence</label>
-      <input type="text" id="locRef" placeholder="Ex: E01550010L">
+
+    <!-- Ligne 3: Chaudière / Téléphone -->
+    <div class="form-field" style="grid-column:1/-1">
+      <label>CHAUDIÈRE ASSOCIÉE</label>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <select id="locChaudiere" onchange="onLocChaudiereChange()" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--text)">
+          <option value="">— Non renseigné —</option>
+        </select>
+        <button type="button" onclick="openChaudModalFromLoc()" title="Créer une nouvelle chaudière" style="padding:9px 14px;background:var(--secondary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;font-weight:600">+ Nouvelle</button>
+      </div>
+      <!-- Aperçu infos chaudière sélectionnée -->
+      <div id="locChaudierePreview" style="display:none;margin-top:8px;background:#f0f7ff;border:1px solid #bee3f8;border-radius:8px;padding:10px 14px;font-size:12px;color:#1a5276">
+        <span id="locChaudierePreviewText"></span>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Bâtiment</label>
-      <input type="text" id="locBat" placeholder="Ex: BAT A">
-    </div>
-    <div class="form-group">
-      <label>Escalier</label>
-      <input type="text" id="locEsc" placeholder="">
-    </div>
-    <div class="form-group">
-      <label>Étage</label>
-      <input type="text" id="locEtage" placeholder="Ex: 2">
-    </div>
-    <div class="form-group">
-      <label>Logement n°</label>
-      <input type="text" id="locLgt" placeholder="Ex: 12">
-    </div>
-    <div class="form-group">
-      <label>Type de logement</label>
-      <select id="locType">
-        <option value="">—</option>
-        <option>T1</option><option>T2</option><option>T3</option>
-        <option>T4</option><option>T5</option><option>T6</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>🔥 Type de chaudière</label>
-      <select id="locChaudiere">
-        <option value="">— Non renseigné —</option>
-        <option>Chaudière gaz individuelle</option>
-        <option>Chaudière gaz collective</option>
-        <option>Chaudière condensation</option>
-        <option>Chaudière fioul</option>
-        <option>Chaudière électrique</option>
-        <option>Chaudière bois/granulés</option>
-        <option>Poêle à granulés</option>
-        <option>Pompe à chaleur</option>
-        <option>Climatisation réversible</option>
-        <option>Autre</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Téléphone</label>
+    <div class="form-field">
+      <label>TÉLÉPHONE</label>
       <input type="tel" id="locTel" placeholder="06 XX XX XX XX">
     </div>
-    <div class="form-group full">
-      <label>Email</label>
+
+    <!-- Ligne 4: Email / Date d'entrée -->
+    <div class="form-field">
+      <label>EMAIL</label>
       <input type="email" id="locEmail" placeholder="exemple@mail.fr">
     </div>
-    <div class="form-group full">
-      <label>Adresse</label>
-      <input type="text" id="locAdresse" placeholder="Adresse complète">
+    <div class="form-field">
+      <label>DATE D'ENTRÉE</label>
+      <input type="date" id="locDateEntree">
+    </div>
+
+    <!-- Champs cachés pour localisation précise -->
+    <div class="form-field" style="display:none"><input type="text" id="locRef"></div>
+    <div class="form-field" style="display:none"><input type="text" id="locBat"></div>
+    <div class="form-field" style="display:none"><input type="text" id="locEsc"></div>
+    <div class="form-field" style="display:none"><input type="text" id="locEtage"></div>
+    <div class="form-field" style="display:none"><input type="text" id="locLgt"></div>
+    <div class="form-field" style="display:none"><select id="locType"><option value="">—</option><option>T1</option><option>T2</option><option>T3</option><option>T4</option><option>T5</option><option>T6</option></select></div>
+    <div class="form-field" style="display:none"><input type="text" id="locAdresse"></div>
+
+    <!-- Notes pleine largeur -->
+    <div class="form-field full">
+      <label>NOTES</label>
+      <textarea id="locNotes" placeholder="Remarques, informations complémentaires..." style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;min-height:70px;outline:none;font-family:inherit;transition:border .2s" onfocus="this.style.borderColor='var(--secondary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
     </div>
   </div>
+
   <div class="modal-btns">
     <button class="btn-cancel" onclick="closeLocModal()">Annuler</button>
     <button class="btn-primary" onclick="saveLocataire()">Enregistrer</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CHAUDIÈRE -->
+<div class="modal-overlay" id="chaudModalOverlay">
+<div class="modal modal-lg" style="max-width:680px;width:96%">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h3 id="chaudModalTitle" style="margin-bottom:0">🔥 Modifier la chaudière</h3>
+    <button onclick="closeChaudModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;padding:4px 8px">✕</button>
+  </div>
+  <div class="loc-modal-grid">
+    <div class="form-field">
+      <label>NOM *</label>
+      <input type="text" id="chaudNom" placeholder="Ex: Chaudière 249">
+    </div>
+    <div class="form-field">
+      <label>RÉSIDENCE ASSOCIÉE</label>
+      <select id="chaudResAssoc"></select>
+    </div>
+    <div class="form-field">
+      <label>MARQUE *</label>
+      <input type="text" id="chaudMarque" placeholder="Ex: ELM LEBLANC">
+    </div>
+    <div class="form-field">
+      <label>MODÈLE</label>
+      <input type="text" id="chaudModele" placeholder="Ex: Vitodens 200-W">
+    </div>
+    <div class="form-field">
+      <label>N° DE SÉRIE</label>
+      <input type="text" id="chaudSerie" placeholder="">
+    </div>
+    <div class="form-field">
+      <label>PUISSANCE (KW)</label>
+      <input type="text" id="chaudPuissance" placeholder="Ex: 24">
+    </div>
+    <div class="form-field">
+      <label>ANNÉE INSTALLATION</label>
+      <input type="text" id="chaudAnnee" placeholder="Ex: 2018">
+    </div>
+    <div class="form-field">
+      <label>EMPLACEMENT</label>
+      <input type="text" id="chaudEmplacement" placeholder="Ex: Bât A3 – Ét O – N°249 (T3)">
+    </div>
+    <div class="form-field full">
+      <label>NOTES</label>
+      <textarea id="chaudNotes" placeholder="Ex: Individuelle – T3 – Bât A3" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;min-height:80px;outline:none;font-family:inherit;transition:border .2s" onfocus="this.style.borderColor='var(--secondary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeChaudModal()">Annuler</button>
+    <button class="btn-primary" onclick="saveChaudiere()">Enregistrer</button>
   </div>
 </div>
 </div>
@@ -462,6 +554,7 @@ auth.onAuthStateChanged(user => {
     startListening();
     startListeningLocOverrides();
     startListeningInterventions();
+    startListeningChaudieres();
   } else {
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appScreen').style.display = 'none';
@@ -775,10 +868,15 @@ function getMergedLocataires() {
 function getLocChaudiere(resIdx, locIdx, newKey) {
   const key = newKey || `r${resIdx}_l${locIdx}`;
   const override = locOverrides[key] || {};
-  // Cherche d'abord dans override, sinon dans les données statiques
+  // Priorité : chaudiereKey (lien Firebase) → chaudiere (texte legacy)
+  if (override.chaudiereKey && chaudData[override.chaudiereKey]) {
+    return chaudData[override.chaudiereKey].nom || '';
+  }
   if (override.chaudiere !== undefined) return override.chaudiere;
   if (!newKey) {
     const loc = RESIDENCES_DATA[resIdx]?.locataires[locIdx];
+    // Essayer via chaudiereKey statique si existant
+    if (loc?.chaudiereKey && chaudData[loc.chaudiereKey]) return chaudData[loc.chaudiereKey].nom || '';
     return loc?.chaudiere || '';
   }
   return '';
@@ -849,6 +947,10 @@ window.openLocModal = function(resIdx, locIdx, newKey) {
     document.getElementById('locResIdx').disabled = false;
     fillLocForm({});
   }
+  populateLocChaudiereSelect(
+    locModalMode === 'edit' ? (locOverrides[`r${locModalResIdx}_l${locModalLocIdx}`]?.chaudiereKey || '') :
+    locModalMode === 'editnew' ? (locOverrides[locModalNewKey]?.chaudiereKey || '') : ''
+  );
   overlay.classList.add('open');
 }
 
@@ -857,44 +959,171 @@ window.openLocModalNew = function(newKey) {
 }
 
 function fillLocForm(loc) {
-  document.getElementById('locNom').value = loc.nom || '';
+  // Séparer prénom et nom si possible (format: "NOM PRÉNOM" ou tout dans nom)
+  const fullNom = loc.nom || '';
+  document.getElementById('locPrenom').value = '';
+  document.getElementById('locNom').value = fullNom;
+
   document.getElementById('locRef').value = loc.ref || '';
   document.getElementById('locBat').value = loc.bat || '';
   document.getElementById('locEsc').value = loc.esc || '';
   document.getElementById('locEtage').value = loc.etage || '';
   document.getElementById('locLgt').value = loc.lgt || '';
   document.getElementById('locType').value = loc.type || '';
-  // Chaudière : forcer la valeur dans le select
-  const selChaud = document.getElementById('locChaudiere');
-  selChaud.value = loc.chaudiere || '';
-  // Si la valeur n'existe pas dans les options, l'ajouter dynamiquement
-  if (loc.chaudiere && selChaud.value !== loc.chaudiere) {
-    const opt = document.createElement('option');
-    opt.value = loc.chaudiere;
-    opt.textContent = loc.chaudiere;
-    selChaud.appendChild(opt);
-    selChaud.value = loc.chaudiere;
-  }
+
+  // Champ appartement affiché
+  const locInfo = [
+    loc.bat ? `Bât ${loc.bat}` : '',
+    loc.esc ? `Esc ${loc.esc}` : '',
+    (loc.etage !== '' && loc.etage !== undefined) ? `Ét ${loc.etage}` : '',
+    loc.lgt ? `N°${loc.lgt}` : ''
+  ].filter(Boolean).join(' – ');
+  const appt = loc.type ? `${locInfo}${loc.type ? ` (${loc.type})` : ''}` : locInfo;
+  document.getElementById('locAppart').value = appt || '';
+
+  // Chaudière — liste dynamique depuis Firebase
+  populateLocChaudiereSelect(loc.chaudiereKey || '');
   document.getElementById('locTel').value = loc.tel || '';
   document.getElementById('locEmail').value = loc.email || '';
   document.getElementById('locAdresse').value = loc.adresse || '';
+  document.getElementById('locDateEntree').value = loc.dateEntree || '';
+  document.getElementById('locNotes').value = loc.notes || '';
 }
 
 function getLocFormData() {
+  // Combine prénom + nom en un seul champ nom
+  const prenom = document.getElementById('locPrenom').value.trim();
+  const nom = document.getElementById('locNom').value.trim();
+  const fullNom = prenom && nom ? `${prenom} ${nom}` : (nom || prenom);
   return {
-    nom: document.getElementById('locNom').value.trim(),
+    nom: fullNom,
     ref: document.getElementById('locRef').value.trim(),
     bat: document.getElementById('locBat').value.trim(),
     esc: document.getElementById('locEsc').value.trim(),
     etage: document.getElementById('locEtage').value.trim(),
     lgt: document.getElementById('locLgt').value.trim(),
     type: document.getElementById('locType').value,
-    chaudiere: document.getElementById('locChaudiere').value,
+    chaudiereKey: document.getElementById('locChaudiere').value,
+    chaudiere: document.getElementById('locChaudiere').selectedOptions[0]?.dataset?.nom || '',
     tel: document.getElementById('locTel').value.trim(),
     email: document.getElementById('locEmail').value.trim(),
     adresse: document.getElementById('locAdresse').value.trim(),
+    dateEntree: document.getElementById('locDateEntree').value,
+    notes: document.getElementById('locNotes').value.trim(),
   };
 }
+
+// ---- Chaudière dans la modale locataire ----
+function populateLocChaudiereSelect(selectedKey) {
+  const sel = document.getElementById('locChaudiere');
+  sel.innerHTML = '<option value="">— Non renseigné —</option>';
+  // Trier les chaudières par résidence puis par nom
+  const entries = Object.entries(chaudData).sort((a, b) => {
+    const resA = a[1].resNom || '';
+    const resB = b[1].resNom || '';
+    if (resA !== resB) return resA.localeCompare(resB);
+    return (a[1].nom || '').localeCompare(b[1].nom || '');
+  });
+  // Grouper par résidence
+  let currentRes = null;
+  let optgroup = null;
+  entries.forEach(([key, c]) => {
+    const res = c.resNom || 'Sans résidence';
+    if (res !== currentRes) {
+      if (optgroup) sel.appendChild(optgroup);
+      optgroup = document.createElement('optgroup');
+      optgroup.label = res;
+      currentRes = res;
+    }
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = c.nom || key;
+    opt.dataset.nom = c.nom || '';
+    opt.dataset.marque = c.marque || '';
+    opt.dataset.modele = c.modele || '';
+    opt.dataset.emplacement = c.emplacement || '';
+    opt.dataset.puissance = c.puissance || '';
+    if (key === selectedKey) opt.selected = true;
+    optgroup.appendChild(opt);
+  });
+  if (optgroup) sel.appendChild(optgroup);
+  // Afficher l'aperçu si une chaudière est sélectionnée
+  showChaudierePreview(selectedKey);
+}
+
+function onLocChaudiereChange() {
+  const sel = document.getElementById('locChaudiere');
+  showChaudierePreview(sel.value);
+}
+
+function showChaudierePreview(key) {
+  const preview = document.getElementById('locChaudierePreview');
+  const text = document.getElementById('locChaudierePreviewText');
+  if (!key || !chaudData[key]) { preview.style.display = 'none'; return; }
+  const c = chaudData[key];
+  const parts = [
+    c.marque && c.modele ? `🔧 ${c.marque} ${c.modele}` : (c.marque ? `🔧 ${c.marque}` : null),
+    c.puissance ? `⚡ ${c.puissance} kW` : null,
+    c.annee ? `📅 ${c.annee}` : null,
+    c.emplacement ? `📍 ${c.emplacement}` : null,
+    c.serie ? `N° série : ${c.serie}` : null,
+  ].filter(Boolean);
+  text.textContent = parts.join('  •  ') || 'Aucune info complémentaire';
+  preview.style.display = 'block';
+}
+
+function openChaudModalFromLoc() {
+  // Ferme la modale locataire temporairement, ouvre la chaudière
+  // Quand la chaudière est sauvée, on rouvre et on resélectionne
+  window._locModalWasOpen = true;
+  document.getElementById('locModalOverlay').classList.remove('open');
+  // Pré-remplir la résidence si possible
+  const riVal = document.getElementById('locResIdx').value;
+  openChaudModal(null, riVal);
+}
+
+// saveChaudiere — gère aussi la réouverture de la modale locataire si besoin
+window.saveChaudiere = function() {
+  const nom = document.getElementById('chaudNom').value.trim();
+  if (!nom) { alert('Le nom est obligatoire.'); return; }
+  const riVal = document.getElementById('chaudResAssoc').value;
+  const ri = riVal !== '' ? parseInt(riVal) : null;
+  const data = {
+    nom,
+    resIdx: ri,
+    resNom: ri !== null ? (RESIDENCES_DATA[ri]?.nom || '') : '',
+    marque: document.getElementById('chaudMarque').value.trim(),
+    modele: document.getElementById('chaudModele').value.trim(),
+    serie: document.getElementById('chaudSerie').value.trim(),
+    puissance: document.getElementById('chaudPuissance').value.trim(),
+    annee: document.getElementById('chaudAnnee').value.trim(),
+    emplacement: document.getElementById('chaudEmplacement').value.trim(),
+    notes: document.getElementById('chaudNotes').value.trim(),
+    updatedAt: new Date().toISOString(),
+    updatedBy: currentUser ? currentUser.email : ''
+  };
+  const isNew = !chaudModalKey;
+  let newKey = chaudModalKey;
+  if (isNew) {
+    newKey = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    data.createdAt = data.updatedAt;
+    data.createdBy = data.updatedBy;
+    db.ref(`lot1_chaudieres/${newKey}`).set(data);
+  } else {
+    db.ref(`lot1_chaudieres/${newKey}`).update(data);
+  }
+  showToast(isNew ? '✅ Chaudière ajoutée !' : '✅ Chaudière modifiée !');
+  closeChaudModal();
+  // Si on venait de la modale locataire, rouvrir et présélectionner
+  if (window._locModalWasOpen) {
+    window._locModalWasOpen = false;
+    // Attendre que Firebase ait mis à jour chaudData (via listener)
+    setTimeout(() => {
+      document.getElementById('locModalOverlay').classList.add('open');
+      populateLocChaudiereSelect(newKey);
+    }, 600);
+  }
+};
 
 window.closeLocModal = function() {
   document.getElementById('locModalOverlay').classList.remove('open');
@@ -953,6 +1182,20 @@ window.confirmDelete = function() {
 }
 
 // ---- TABLE LOCATAIRES ----
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#06b6d4','#84cc16','#f97316','#6366f1'];
+function getAvatarColor(name) {
+  let h = 0; for (let c of (name||'')) h = (h*31 + c.charCodeAt(0)) & 0xffffffff;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function getInitials(nom) {
+  const parts = (nom||'').trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0]||'') + (parts[1][0]||'');
+  return (nom||'').slice(0,2).toUpperCase();
+}
+function getLocCity(resNom) {
+  const m = resNom.match(/-\s*(.+)$/); return m ? m[1].trim() : resNom;
+}
+
 function renderLocatairesTable() {
   initLocModalSelects();
   const q = (document.getElementById('locSearchInput')?.value || '').toLowerCase();
@@ -970,115 +1213,215 @@ function renderLocatairesTable() {
   const cont = document.getElementById('locatairesTableContainer');
   if (!filtered.length) { cont.innerHTML = '<p style="text-align:center;color:#aaa;padding:30px">Aucun locataire trouvé.</p>'; return; }
 
-  let html = `<div class="table-wrap"><table>
-    <thead><tr>
-      <th>Nom</th><th>Résidence</th><th>Réf.</th><th>Localisation</th>
-      <th>Type lgt</th><th>🔥 Chaudière</th><th>Téléphone</th><th>Email</th><th style="width:120px">Actions</th>
-    </tr></thead><tbody>`;
-
+  let rows = '';
   filtered.forEach(loc => {
+    const initials = getInitials(loc.nom);
+    const color = getAvatarColor(loc.nom);
+    const resShort = loc._resNom ? loc._resNom.split(' - ')[0] : loc._resNom;
+    const city = getLocCity(loc._resNom || '');
+
+    // Appartement formaté comme dans la capture
     const locInfo = [
-      loc.bat ? `Bat ${loc.bat}` : '',
+      loc.bat ? `Bât ${loc.bat}` : '',
       loc.esc ? `Esc ${loc.esc}` : '',
-      loc.etage !== '' ? `Ét ${loc.etage}` : '',
-      loc.lgt ? `Lgt ${loc.lgt}` : ''
-    ].filter(Boolean).join(' / ');
-    const chaud = loc.chaudiere ? `<span class="chaudiere-badge">🔥 ${loc.chaudiere}</span>` : '<span style="color:#ccc">—</span>';
-    const tel = loc.tel ? `<a href="tel:${loc.tel}" style="color:var(--secondary)">${loc.tel}</a>` : '—';
+      (loc.etage !== '' && loc.etage !== undefined) ? `Ét ${loc.etage}` : '',
+      loc.lgt ? `N°${loc.lgt}` : ''
+    ].filter(Boolean).join(' – ');
+    const apptDisplay = loc.type ? `${locInfo}${loc.type ? ` (${loc.type})` : ''}` : locInfo || '—';
+
+    const chaudNomResolved = loc.chaudiereKey && chaudData[loc.chaudiereKey]
+      ? chaudData[loc.chaudiereKey].nom
+      : (loc.chaudiere || '');
+    const chaud = chaudNomResolved ? `🔥 ${chaudNomResolved}` : '<span style="color:#cbd5e1">—</span>';
+    const tel = loc.tel ? `<a href="tel:${loc.tel}" style="color:var(--secondary);font-size:12px">${loc.tel}</a>` : '—';
     const email = loc.email ? `<a href="mailto:${loc.email}" style="color:var(--secondary);font-size:11px">${loc.email}</a>` : '—';
-    const editCall = loc._isNew
-      ? `openLocModalNew('${loc._key}')`
-      : `openLocModal(${loc._resIdx},${loc._locIdx})`;
-    const delCall = loc._isNew
-      ? `askDeleteLocataire(null,null,'${loc._key}')`
-      : `askDeleteLocataire(${loc._resIdx},${loc._locIdx})`;
-    html += `<tr>
-      <td><b>${loc.nom}</b></td>
-      <td style="font-size:12px;color:#555">${loc._resNom}</td>
-      <td style="font-size:11px;color:#888">${loc.ref||'—'}</td>
-      <td style="font-size:12px">${locInfo||'—'}</td>
-      <td>${loc.type||'—'}</td>
-      <td>${chaud}</td>
-      <td>${tel}</td>
-      <td>${email}</td>
+
+    // Statut entretien
+    const k = `r${loc._resIdx}_l${loc._locIdx}`;
+    const done = dbData[k] && dbData[k].done;
+    const statusBadge = done
+      ? `<span class="loc-status-badge loc-status-done">✅ Fait</span>`
+      : `<span class="loc-status-badge loc-status-pending">En attente</span>`;
+
+    // Nombre d'interventions
+    const intervCount = Object.values(intervData || {}).filter(d =>
+      d.resIdx === loc._resIdx && d.locIdx === loc._locIdx
+    ).length;
+
+    const editCall = loc._isNew ? `openLocModalNew('${loc._key}')` : `openLocModal(${loc._resIdx},${loc._locIdx})`;
+    const delCall = loc._isNew ? `askDeleteLocataire(null,null,'${loc._key}')` : `askDeleteLocataire(${loc._resIdx},${loc._locIdx})`;
+
+    rows += `<tr>
       <td>
-        <button class="btn-sm btn-edit" onclick="${editCall}" title="Modifier">✏️</button>
-        <button class="btn-sm btn-delete" onclick="${delCall}" title="Supprimer" style="margin-left:4px">🗑️</button>
+        <div class="loc-cell-name">
+          <div class="loc-avatar" style="background:${color}">${initials}</div>
+          <div>
+            <div class="loc-name">${loc.nom}</div>
+            <div class="loc-phone">${loc.tel || ''}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="loc-res-name">${resShort}</div>
+        <div class="loc-res-city">${city}</div>
+      </td>
+      <td style="font-size:12px;color:#475569">${apptDisplay}</td>
+      <td><span class="chaudiere-badge" style="font-size:11px">${chaud}</span></td>
+      <td style="font-size:12px">${tel}<br>${email}</td>
+      <td style="text-align:center;font-size:13px;font-weight:600;color:var(--primary)">${intervCount}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <button class="loc-action-btn" onclick="${editCall}">Modifier</button><button class="loc-delete-btn" onclick="${delCall}" title="Supprimer">✕</button>
       </td>
     </tr>`;
   });
 
-  html += `</tbody></table></div>`;
-  html += `<p style="font-size:12px;color:#aaa;margin-top:8px;text-align:right">${filtered.length} locataire(s) affiché(s)</p>`;
-  cont.innerHTML = html;
+  cont.innerHTML = `<table class="loc-table">
+    <thead><tr>
+      <th>LOCATAIRE</th>
+      <th>RÉSIDENCE</th>
+      <th>APPARTEMENT</th>
+      <th>CHAUDIÈRE</th>
+      <th>CONTACT</th>
+      <th style="text-align:center">INTERVENTIONS</th>
+      <th>STATUT ENTRETIEN</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p style="font-size:12px;color:#aaa;padding:10px 14px;text-align:right">${filtered.length} locataire(s)</p>`;
 }
 
+
+
 // ---- TABLE CHAUDIERES ----
+// ===================== CHAUDIÈRES CRUD =====================
+let chaudData = {};
+let chaudModalKey = null;
+
+function startListeningChaudieres() {
+  db.ref('lot1_chaudieres').on('value', snap => {
+    chaudData = snap.val() || {};
+    if (document.getElementById('tab-chaudieres').classList.contains('active')) renderChaudieresTable();
+    const statEl = document.getElementById('statChaud');
+    if (statEl) statEl.textContent = Object.keys(chaudData).length;
+  });
+}
+
+function initChaudResSelect() {
+  const sel = document.getElementById('chaudResAssoc');
+  if (sel && sel.options.length <= 1) {
+    sel.innerHTML = '<option value="">— Aucune —</option>';
+    RESIDENCES_DATA.forEach((res, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = res.nom;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+window.openChaudModal = function(key, preResIdx) {
+  initChaudResSelect();
+  chaudModalKey = key || null;
+  const d = key ? (chaudData[key] || {}) : {};
+  document.getElementById('chaudModalTitle').textContent = key ? '🔥 Modifier la chaudière' : '🔥 Nouvelle chaudière';
+  document.getElementById('chaudNom').value = d.nom || '';
+  // Résidence : priorité à la chaudière existante, sinon pré-remplissage depuis le locataire
+  const riToSet = d.resIdx !== undefined ? d.resIdx : (preResIdx !== undefined && preResIdx !== '' ? preResIdx : '');
+  document.getElementById('chaudResAssoc').value = riToSet;
+  document.getElementById('chaudMarque').value = d.marque || '';
+  document.getElementById('chaudModele').value = d.modele || '';
+  document.getElementById('chaudSerie').value = d.serie || '';
+  document.getElementById('chaudPuissance').value = d.puissance || '';
+  document.getElementById('chaudAnnee').value = d.annee || '';
+  document.getElementById('chaudEmplacement').value = d.emplacement || '';
+  document.getElementById('chaudNotes').value = d.notes || '';
+  document.getElementById('chaudModalOverlay').classList.add('open');
+}
+
+window.closeChaudModal = function() {
+  document.getElementById('chaudModalOverlay').classList.remove('open');
+  chaudModalKey = null;
+}
+
+// saveChaudiere handled above
+
+window.deleteChaudiere = function(key) {
+  const nom = chaudData[key]?.nom || 'cette chaudière';
+  if (confirm(`Supprimer "${nom}" ? Cette action est irréversible.`)) {
+    db.ref(`lot1_chaudieres/${key}`).remove();
+    showToast('🗑️ Chaudière supprimée.');
+  }
+}
+
 function renderChaudieresTable() {
   initLocModalSelects();
   const q = (document.getElementById('chaudSearchInput')?.value || '').toLowerCase();
   const riFilter = document.getElementById('chaudFilterRes')?.value;
-  const all = getMergedLocataires();
-  let filtered = all.filter(loc => {
-    if (riFilter !== '' && String(loc._resIdx) !== riFilter) return false;
-    if (q) {
-      const hay = (loc.nom + (loc.chaudiere||'') + loc._resNom).toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
 
-  // Regrouper par type de chaudière pour les stats
-  const byType = {};
-  filtered.forEach(loc => {
-    const t = loc.chaudiere || '— Non renseigné';
-    byType[t] = (byType[t] || 0) + 1;
+  let entries = Object.entries(chaudData).map(([k, v]) => ({ ...v, _key: k }));
+  if (riFilter !== '') entries = entries.filter(c => String(c.resIdx) === riFilter);
+  if (q) entries = entries.filter(c => {
+    const hay = ((c.nom||'') + (c.marque||'') + (c.modele||'') + (c.resNom||'') + (c.notes||'')).toLowerCase();
+    return hay.includes(q);
   });
+  entries.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
 
   const cont = document.getElementById('chaudieresTableContainer');
+  const total = entries.length;
+  const avecModele = entries.filter(c => c.modele).length;
 
-  // Stats cards
-  let statsHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px">';
-  Object.entries(byType).sort((a,b)=>b[1]-a[1]).forEach(([t,c]) => {
-    const pct = Math.round(c / filtered.length * 100);
-    statsHtml += `<div class="stat-card" style="border-left-color:${t.includes('Non')?'#ddd':'var(--warning)'}">
-      <div class="val" style="font-size:22px;color:${t.includes('Non')?'#aaa':'var(--warning)'}">${c}</div>
-      <div class="lbl">${t}</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--warning),#f39c12)"></div></div>
-    </div>`;
-  });
-  statsHtml += '</div>';
+  const statsHtml = `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+    <div class="stat-card" style="flex:1;min-width:140px;padding:14px;border-left-color:var(--warning)">
+      <div class="val" style="font-size:24px;color:var(--warning)">${total}</div><div class="lbl">🔥 Chaudières</div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:140px;padding:14px;border-left-color:var(--success)">
+      <div class="val" style="font-size:24px;color:var(--success)">${avecModele}</div><div class="lbl">Avec modèle renseigné</div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:140px;padding:14px;border-left-color:#bbb">
+      <div class="val" style="font-size:24px;color:#999">${total - avecModele}</div><div class="lbl">À compléter</div>
+    </div>
+  </div>`;
 
-  // Table
-  let html = `<div class="table-wrap"><table>
-    <thead><tr>
-      <th>Locataire</th><th>Résidence</th><th>Localisation</th>
-      <th>🔥 Type de chaudière</th><th>Actions</th>
-    </tr></thead><tbody>`;
+  if (!entries.length) {
+    cont.innerHTML = statsHtml + '<p style="text-align:center;color:#aaa;padding:30px">Aucune chaudière. Cliquez sur "+ Ajouter chaudière" pour commencer.</p>';
+    return;
+  }
 
-  filtered.forEach(loc => {
-    const locInfo = [
-      loc.bat ? `Bat ${loc.bat}` : '',
-      loc.lgt ? `Lgt ${loc.lgt}` : ''
-    ].filter(Boolean).join(' / ');
-    const chaud = loc.chaudiere ? `<span class="chaudiere-badge">🔥 ${loc.chaudiere}</span>` : '<span style="color:#ccc">Non renseigné</span>';
-    const editCall = loc._isNew
-      ? `openLocModalNew('${loc._key}')`
-      : `openLocModal(${loc._resIdx},${loc._locIdx})`;
-    html += `<tr>
-      <td><b>${loc.nom}</b></td>
-      <td style="font-size:12px;color:#555">${loc._resNom}</td>
-      <td style="font-size:12px">${locInfo||'—'}</td>
-      <td>${chaud}</td>
-      <td><button class="btn-sm btn-edit" onclick="${editCall}" title="Modifier chaudière">✏️</button></td>
+  let rows = '';
+  entries.forEach(c => {
+    const marqueModele = [c.marque, c.modele].filter(Boolean).join(' – ') || '—';
+    rows += `<tr>
+      <td><b style="color:var(--primary)">${c.nom || '—'}</b></td>
+      <td style="font-size:12px;color:#555">${c.resNom || '—'}</td>
+      <td style="font-size:12px">${marqueModele}</td>
+      <td style="font-size:12px">${c.serie || '<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:12px">${c.puissance ? c.puissance + ' kW' : '<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:12px">${c.annee || '<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:12px;color:#666">${c.emplacement || '<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:11px;color:#888;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.notes || ''}</td>
+      <td>
+        <button class="btn-sm btn-edit" onclick="openChaudModal('${c._key}')" title="Modifier">✏️</button>
+        <button class="btn-sm btn-delete" onclick="deleteChaudiere('${c._key}')" title="Supprimer" style="margin-left:4px">🗑️</button>
+      </td>
     </tr>`;
   });
 
-  html += `</tbody></table></div>`;
-  cont.innerHTML = statsHtml + html;
+  cont.innerHTML = statsHtml + `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Nom</th><th>Résidence</th><th>Marque – Modèle</th><th>N° Série</th>
+      <th>Puissance</th><th>Année</th><th>Emplacement</th><th>Notes</th><th style="width:80px">Actions</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>
+  <p style="font-size:12px;color:#aaa;margin-top:8px;text-align:right">${entries.length} chaudière(s)</p>`;
 }
 
 // Close modals on overlay click
+document.getElementById('chaudModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeChaudModal();
+});
 document.getElementById('locModalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLocModal();
 });
