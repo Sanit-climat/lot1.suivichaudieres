@@ -156,6 +156,40 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 .btn-primary:hover{background:var(--secondary)}
 .btn-cancel{padding:9px 20px;background:#eee;color:var(--text);border:none;border-radius:8px;cursor:pointer;font-size:14px}
 .btn-cancel:hover{background:#ddd}
+/* SUIVI CONTACT */
+.suivi-cell{font-size:11px;line-height:1.7;min-width:160px}
+.suivi-line{display:flex;align-items:center;gap:5px;color:#475569}
+.suivi-line span.label{color:#94a3b8;font-weight:600;min-width:70px;font-size:10px;text-transform:uppercase}
+.suivi-line span.val{color:var(--text);font-weight:500}
+.suivi-line span.val.empty{color:#cbd5e1;font-style:italic}
+.suivi-edit-btn{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:12px;padding:0 2px;transition:color .15s}
+.suivi-edit-btn:hover{color:var(--secondary)}
+.suivi-modal{background:var(--white);border-radius:14px;padding:24px 28px;max-width:420px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.suivi-modal h3{color:var(--primary);margin-bottom:6px;font-size:16px}
+.suivi-modal .sub{font-size:12px;color:#94a3b8;margin-bottom:18px}
+.suivi-field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.suivi-field label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.suivi-field input,.suivi-field textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border .2s}
+.suivi-field input:focus,.suivi-field textarea:focus{border-color:var(--secondary)}
+.suivi-field textarea{resize:vertical;min-height:60px}
+/* MODE BAILLEUR */
+.bailleur-btn{background:#6c3483;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;transition:background .2s}
+.bailleur-btn:hover{background:#5b2c6f}
+
+/* MODE LECTURE SEULE (BAILLEUR) */
+body.readonly .btn-add,
+body.readonly .btn-ok,
+body.readonly .btn-undo,
+body.readonly .btn-comment,
+body.readonly .btn-edit,
+body.readonly .btn-delete,
+body.readonly .loc-action-btn,
+body.readonly .loc-delete-btn,
+body.readonly .suivi-edit-btn,
+body.readonly .bailleur-btn,
+body.readonly #btnLogout { display:none }
+body.readonly .readonly-badge { display:flex !important }
+.readonly-badge { display:none;align-items:center;gap:6px;background:rgba(108,52,131,.25);border:1px solid rgba(108,52,131,.5);color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600 }
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:var(--white);padding:12px 20px;border-radius:10px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
@@ -191,6 +225,7 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
     <span>LOT 1 – Porte de Camargues</span>
   </div>
   <div class="header-right">
+    <span class="readonly-badge">👁️ Mode lecture seule</span>
     <span id="userEmail"></span>
     <button id="btnLogout" onclick="doLogout()">Déconnexion</button>
   </div>
@@ -253,6 +288,7 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
           <select id="locFilterRes" onchange="renderLocatairesTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
             <option value="">Toutes les résidences</option>
           </select>
+          <button class="bailleur-btn" onclick="openBailleurView()">📄 Vue Bailleur</button>
           <button class="btn-add" onclick="openLocModal()">+ Ajouter un locataire</button>
         </div>
       </div>
@@ -533,6 +569,34 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 </div>
 </div>
 
+<!-- MODAL SUIVI CONTACT -->
+<div class="modal-overlay" id="suiviModalOverlay">
+<div class="suivi-modal">
+  <h3>📞 Suivi contact</h3>
+  <p class="sub" id="suiviModalLocName"></p>
+  <div class="suivi-field">
+    <label>📞 Appel le</label>
+    <input type="text" id="suiviAppel" placeholder="Ex: 15/01/2026 – RDV pris">
+  </div>
+  <div class="suivi-field">
+    <label>💬 SMS le</label>
+    <input type="text" id="suiviSms" placeholder="Ex: 20/01/2026 – Pas de réponse">
+  </div>
+  <div class="suivi-field">
+    <label>📋 Relance gestionnaire le</label>
+    <input type="text" id="suiviRelance" placeholder="Ex: 25/01/2026 – Mail envoyé">
+  </div>
+  <div class="suivi-field">
+    <label>🗒️ Remarques</label>
+    <textarea id="suiviRemarque" placeholder="Toute autre information utile..."></textarea>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeSuiviModal()">Annuler</button>
+    <button class="btn-primary" onclick="saveSuivi()">Enregistrer</button>
+  </div>
+</div>
+</div>
+
 <!-- CONFIRM DELETE -->
 <div class="confirm-overlay" id="confirmOverlay">
 <div class="confirm-box">
@@ -627,12 +691,27 @@ let dbData = {};
 let currentModalKey = null;
 let currentUser = null;
 let unsubscribe = null;
+let isReadOnly = false;
+
+// Liste des emails en mode lecture seule (bailleur)
+// Ajoutez ici les emails des comptes bailleur
+const READONLY_EMAILS = [
+  'bailleur@lot1-camargues.fr',
+  // Ajoutez d'autres emails bailleur ici si besoin
+];
 
 // ===================== AUTH =====================
 auth.onAuthStateChanged(user => {
   document.getElementById('loader').style.display = 'none';
   if (user) {
     currentUser = user;
+    // Détecter si c'est un compte bailleur (lecture seule)
+    isReadOnly = READONLY_EMAILS.includes(user.email.toLowerCase());
+    if (isReadOnly) {
+      document.body.classList.add('readonly');
+    } else {
+      document.body.classList.remove('readonly');
+    }
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'flex';
     document.getElementById('userEmail').textContent = user.email;
@@ -640,8 +719,11 @@ auth.onAuthStateChanged(user => {
     startListeningLocOverrides();
     startListeningInterventions();
     startListeningChaudieres();
+    startListeningSuivi();
     startListeningVmc();
   } else {
+    isReadOnly = false;
+    document.body.classList.remove('readonly');
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appScreen').style.display = 'none';
     if (unsubscribe) unsubscribe();
@@ -893,6 +975,7 @@ window.showTab = function(tab, btn) {
 
 // ===================== ACTIONS =====================
 window.toggleDone = function(key, val) {
+  if (isReadOnly) return;
   const updates = {};
   updates[`lot1/${key}/done`] = val;
   if (val) {
@@ -916,6 +999,7 @@ window.closeModal = function() {
 }
 
 window.saveComment = function() {
+  if (isReadOnly) return;
   if (!currentModalKey) return;
   const c = document.getElementById('modalComment').value.trim();
   const d = document.getElementById('modalDate').value;
@@ -1202,6 +1286,7 @@ function openChaudModalFromLoc() {
 
 // saveChaudiere — gère aussi la réouverture de la modale locataire si besoin
 window.saveChaudiere = function() {
+  if (isReadOnly) return;
   const nom = document.getElementById('chaudNom').value.trim();
   if (!nom) { alert('Le nom est obligatoire.'); return; }
   const riVal = document.getElementById('chaudResAssoc').value;
@@ -1249,6 +1334,7 @@ window.closeLocModal = function() {
 }
 
 window.saveLocataire = function() {
+  if (isReadOnly) return;
   const data = getLocFormData();
   if (!data.nom) { alert('Le nom est obligatoire.'); return; }
 
@@ -1272,6 +1358,7 @@ window.saveLocataire = function() {
 
 // ---- SUPPRESSION ----
 window.askDeleteLocataire = function(resIdx, locIdx, newKey) {
+  if (isReadOnly) return;
   const overlay = document.getElementById('confirmOverlay');
   let nom = '';
   if (newKey) { nom = (locOverrides[newKey]?.nom || 'ce locataire'); }
@@ -1388,6 +1475,9 @@ function renderLocatairesTable() {
       <td><span class="chaudiere-badge" style="font-size:11px">${chaud}</span></td>
       <td style="font-size:12px">${tel}<br>${email}</td>
       <td style="text-align:center;font-size:13px;font-weight:600;color:var(--primary)">${intervCount}</td>
+      <td class="suivi-cell">
+        ${buildSuiviCell(loc)}
+      </td>
       <td>${statusBadge}</td>
       <td>
         <button class="loc-action-btn" onclick="${editCall}">Modifier</button><button class="loc-delete-btn" onclick="${delCall}" title="Supprimer">✕</button>
@@ -1404,6 +1494,7 @@ function renderLocatairesTable() {
       <th>CHAUDIÈRE</th>
       <th>CONTACT</th>
       <th style="text-align:center">INTERVENTIONS</th>
+      <th>SUIVI CONTACT</th>
       <th>STATUT ENTRETIEN</th>
       <th></th>
     </tr></thead>
@@ -1653,6 +1744,7 @@ window.closeIntervModal = function() {
 }
 
 window.saveIntervention = function() {
+  if (isReadOnly) return;
   const ri = parseInt(document.getElementById('intervResIdx').value);
   const li = parseInt(document.getElementById('intervLocIdx').value);
   const date = document.getElementById('intervDate').value;
@@ -1706,6 +1798,7 @@ window.saveIntervention = function() {
 }
 
 window.deleteIntervention = function(key) {
+  if (isReadOnly) return;
   const d = intervData[key];
   const nom = d?.locNom || 'cette intervention';
   if (confirm(`Supprimer l'intervention pour "${nom}" du ${d?.date || '?'} ?`)) {
@@ -1825,6 +1918,188 @@ function renderInterventionsTable() {
 }
 
 
+
+// ===================== SUIVI CONTACT =====================
+let suiviData = {};
+let suiviModalKey = null;
+
+function startListeningSuivi() {
+  db.ref('lot1_suivi').on('value', snap => {
+    suiviData = snap.val() || {};
+    if (document.getElementById('tab-locataires').classList.contains('active')) renderLocatairesTable();
+  });
+}
+
+function getSuiviKey(loc) {
+  return loc._isNew ? ('new_' + loc._key) : ('r' + loc._resIdx + '_l' + loc._locIdx);
+}
+
+function buildSuiviCell(loc) {
+  const key = getSuiviKey(loc);
+  const s = suiviData[key] || {};
+  const appel   = s.appel   || '';
+  const sms     = s.sms     || '';
+  const relance = s.relance || '';
+  const remarque= s.remarque|| '';
+
+  const line = (icon, label, val) => `
+    <div class="suivi-line">
+      <span class="label">${icon} ${label}</span>
+      <span class="val${val ? '' : ' empty'}">${val || '—'}</span>
+    </div>`;
+
+  return `<div>
+    ${line('📞','Appel', appel)}
+    ${line('💬','SMS', sms)}
+    ${line('📋','Relance', relance)}
+    ${remarque ? line('🗒️','Note', remarque) : ''}
+    <button class="suivi-edit-btn" onclick="openSuiviModal('${key}',this.dataset.nom)" data-nom="${loc.nom.replace(/"/g,'&quot;')}">✏️ Modifier</button>
+  </div>`;
+}
+
+function openSuiviModal(key, nomLoc) {
+  suiviModalKey = key;
+  document.getElementById('suiviModalLocName').textContent = nomLoc;
+  const s = suiviData[key] || {};
+  document.getElementById('suiviAppel').value   = s.appel    || '';
+  document.getElementById('suiviSms').value     = s.sms      || '';
+  document.getElementById('suiviRelance').value = s.relance  || '';
+  document.getElementById('suiviRemarque').value= s.remarque || '';
+  document.getElementById('suiviModalOverlay').classList.add('open');
+}
+
+function closeSuiviModal() {
+  document.getElementById('suiviModalOverlay').classList.remove('open');
+  suiviModalKey = null;
+}
+
+function saveSuivi() {
+  if (isReadOnly) return;
+  if (!suiviModalKey) return;
+  const data = {
+    appel:    document.getElementById('suiviAppel').value.trim(),
+    sms:      document.getElementById('suiviSms').value.trim(),
+    relance:  document.getElementById('suiviRelance').value.trim(),
+    remarque: document.getElementById('suiviRemarque').value.trim(),
+    updatedAt: new Date().toISOString(),
+    updatedBy: currentUser?.email || ''
+  };
+  db.ref('lot1_suivi/' + suiviModalKey).update(data);
+  showToast('✅ Suivi contact enregistré !');
+  closeSuiviModal();
+}
+
+document.getElementById('suiviModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSuiviModal();
+});
+
+// ===================== VUE BAILLEUR =====================
+function openBailleurView() {
+  const riFilter = document.getElementById('locFilterRes')?.value;
+  const all = getMergedLocataires();
+  const filtered = riFilter !== '' ? all.filter(l => String(l._resIdx) === riFilter) : all;
+
+  // Group by residence
+  const byRes = {};
+  filtered.forEach(loc => {
+    const rn = loc._resNom || 'Résidence inconnue';
+    if (!byRes[rn]) byRes[rn] = [];
+    byRes[rn].push(loc);
+  });
+
+  const RESULTAT_LABELS = { ok:'✅ Conforme', nok:'⚠️ Non conforme', rappel:'📅 Rappel', absent:'🚪 Absent', refuse:'❌ Refus', '':'—' };
+
+  let tables = '';
+  Object.entries(byRes).forEach(([resNom, locs]) => {
+    let rows = '';
+    locs.forEach(loc => {
+      const k = 'r' + loc._resIdx + '_l' + loc._locIdx;
+      const done = (window.dbData?.[k] && window.dbData[k].done);
+      const statut = done ? '✅ Fait' : '⏳ En attente';
+      const s = suiviData[getSuiviKey(loc)] || {};
+
+      // Dernière intervention
+      const intervs = Object.values(window.intervData || {})
+        .filter(d => d.resIdx === loc._resIdx && d.locIdx === loc._locIdx)
+        .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      const lastInterv = intervs[0];
+      const intervCell = lastInterv
+        ? `${lastInterv.date || '—'}<br><small>${RESULTAT_LABELS[lastInterv.resultat] || '—'}</small>`
+        : '—';
+
+      rows += `<tr>
+        <td>${loc.ref || '—'}</td>
+        <td><b>${loc.nom}</b></td>
+        <td style="font-size:11px">${[loc.bat?'Bât '+loc.bat:'', loc.lgt?'N°'+loc.lgt:'', loc.type||''].filter(Boolean).join(' ')}</td>
+        <td>${loc.tel || '—'}</td>
+        <td>${statut}</td>
+        <td>${intervCell}</td>
+        <td>${s.appel || '—'}</td>
+        <td>${s.sms || '—'}</td>
+        <td>${s.relance || '—'}</td>
+        <td style="font-size:11px">${s.remarque || '—'}</td>
+      </tr>`;
+    });
+
+    tables += `<div class="res-block">
+      <h2>${resNom}</h2>
+      <table>
+        <thead><tr>
+          <th>Réf.</th><th>Locataire</th><th>Appt.</th><th>Tél.</th>
+          <th>Statut entretien</th><th>Dernière intervention</th>
+          <th>Appel le</th><th>SMS le</th><th>Relance gest.</th><th>Remarques</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  });
+
+  const now = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  const resLabel = riFilter !== '' ? (RESIDENCES_DATA[parseInt(riFilter)]?.nom || '') : 'Toutes résidences';
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Suivi Entretien – Vue Bailleur</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a2e; margin: 0; padding: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1a5276; padding-bottom: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 18px; color: #1a5276; margin: 0; }
+  .header .meta { font-size: 11px; color: #666; text-align: right; }
+  .res-block { margin-bottom: 30px; page-break-inside: avoid; }
+  .res-block h2 { font-size: 14px; color: #1a5276; background: #eaf4fc; padding: 6px 12px; border-left: 4px solid #1a5276; margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead th { background: #1a5276; color: #fff; padding: 6px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; }
+  tbody tr:nth-child(even) { background: #f7fafc; }
+  tbody td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .footer { margin-top: 30px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+  @media print { body { padding: 0; } .no-print { display: none; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>📋 Suivi Entretien Chaudière – LOT 1</h1>
+    <p style="margin:4px 0 0;font-size:12px;color:#555">${resLabel}</p>
+  </div>
+  <div class="meta">
+    Document généré le ${now}<br>
+    <span style="color:#c0392b;font-weight:700">⚠️ Document confidentiel – Lecture seule</span>
+  </div>
+</div>
+<div class="no-print" style="background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:12px">
+  🖨️ <b>Vue Bailleur</b> — Document en lecture seule. <button onclick="window.print()" style="margin-left:12px;padding:4px 14px;background:#1a5276;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🖨️ Imprimer / Exporter PDF</button>
+</div>
+${tables}
+<div class="footer">Suivi Entretien Chaudière – LOT 1 Porte de Camargues &bull; Généré le ${now}</div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
 // ===================== VMC =====================
 let vmcData = {};
 let vmcModalKey = null;
@@ -1876,6 +2151,7 @@ function closeVmcModal() {
 }
 
 function saveVmc() {
+  if (isReadOnly) return;
   const resIdx = parseInt(document.getElementById('vmcResIdx').value);
   const resNom = RESIDENCES_DATA[resIdx]?.nom || '';
   const data = {
@@ -1904,6 +2180,7 @@ function saveVmc() {
 }
 
 function deleteVmc(key) {
+  if (isReadOnly) return;
   const d = vmcData[key];
   const nom = d?.resNom || 'cette VMC';
   if (confirm(`Supprimer la fiche VMC de "${nom}" ?`)) {
