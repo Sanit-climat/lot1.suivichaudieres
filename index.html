@@ -156,6 +156,19 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 .btn-primary:hover{background:var(--secondary)}
 .btn-cancel{padding:9px 20px;background:#eee;color:var(--text);border:none;border-radius:8px;cursor:pointer;font-size:14px}
 .btn-cancel:hover{background:#ddd}
+/* TRI COLONNES */
+.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+.sortable:hover{background:rgba(255,255,255,.15)}
+.sort-icon{font-size:10px;margin-left:4px;opacity:.6}
+.sort-icon.active{opacity:1}
+/* ÉCHÉANCES */
+.echeance-ok{color:var(--success);font-weight:600}
+.echeance-warn{color:#e67e22;font-weight:700}
+.echeance-late{color:var(--danger);font-weight:700;animation:pulse .8s infinite alternate}
+@keyframes pulse{from{opacity:1}to{opacity:.6}}
+.badge-warn{background:#fff3cd;color:#856404;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid #ffc107}
+.badge-late{background:#fde8e8;color:var(--danger);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid var(--danger)}
+.badge-ok{background:#d5f5e3;color:var(--success);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
 /* SUIVI CONTACT */
 .suivi-cell{font-size:11px;line-height:1.7;min-width:160px}
 .suivi-line{display:flex;align-items:center;gap:5px;color:#475569}
@@ -288,6 +301,14 @@ body.readonly .readonly-badge { display:flex !important }
           <select id="locFilterRes" onchange="renderLocatairesTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
             <option value="">Toutes les résidences</option>
           </select>
+          <select id="locSortBy" onchange="renderLocatairesTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="nom">Trier : Nom A→Z</option>
+            <option value="nom_desc">Trier : Nom Z→A</option>
+            <option value="res">Trier : Résidence</option>
+            <option value="entretien_asc">Trier : Prochain entretien ↑</option>
+            <option value="entretien_desc">Trier : Prochain entretien ↓</option>
+            <option value="statut">Trier : Statut (à faire d'abord)</option>
+          </select>
           <button class="bailleur-btn" onclick="openBailleurView()">📄 Vue Bailleur</button>
           <button class="btn-add" onclick="openLocModal()">+ Ajouter un locataire</button>
         </div>
@@ -325,6 +346,12 @@ body.readonly .readonly-badge { display:flex !important }
           <option value="90">3 derniers mois</option>
           <option value="365">Cette année</option>
         </select>
+        <select id="intervSortBy" onchange="renderInterventionsTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="date_desc">Trier : Date récente ↓</option>
+          <option value="date_asc">Trier : Date ancienne ↑</option>
+          <option value="nom">Trier : Locataire A→Z</option>
+          <option value="resultat">Trier : Résultat</option>
+        </select>
       </div>
       <button class="btn-add" onclick="openIntervModal()">➕ Ajouter intervention</button>
     </div>
@@ -336,7 +363,14 @@ body.readonly .readonly-badge { display:flex !important }
   <div id="tab-vmc" class="tab-panel">
     <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
       <h2 style="font-size:16px;font-weight:700;color:var(--primary)">💨 Entretien VMC – Toiture</h2>
-      <button class="btn-add" onclick="openVmcModal()">➕ Ajouter fiche VMC</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="vmcSortBy" onchange="renderVmcTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="res">Trier : Résidence</option>
+          <option value="prochain_asc">Trier : Prochain entretien ↑</option>
+          <option value="prochain_desc">Trier : Prochain entretien ↓</option>
+        </select>
+        <button class="btn-add" onclick="openVmcModal()">➕ Ajouter fiche VMC</button>
+      </div>
     </div>
     <div id="vmcContainer"></div>
   </div>
@@ -872,6 +906,8 @@ function renderAccordion() {
       const telLink = loc.tel ? `<a href="tel:${loc.tel}" style="color:var(--secondary)">${loc.tel}</a>` : '—';
       const emailLink = loc.email ? `<a href="mailto:${loc.email}" style="color:var(--secondary);font-size:11px">${loc.email}</a>` : '—';
       const dateStr = d.date || '';
+      const locOver = locOverrides[getKey(ri, li)] || {};
+      const prochainDate = locOver.dateProchainEntretien || '';
       const commentStr = d.comment ? `<br><span style="color:#888;font-size:11px">💬 ${d.comment}</span>` : '';
       // Get chaudière (from locOverrides or static)
       const chaudiereVal = getLocChaudiere(ri, li);
@@ -887,6 +923,7 @@ function renderAccordion() {
         <td>${telLink}</td>
         <td>${emailLink}</td>
         <td style="font-size:11px">${dateStr}</td>
+        <td style="white-space:nowrap">${echeanceBadge(prochainDate)}</td>
         <td>
           ${isDone
             ? `<button class="btn-sm btn-undo" onclick="toggleDone('${k}',false)">Annuler</button>`
@@ -937,9 +974,10 @@ function renderAccordion() {
             <th>Téléphone</th>
             <th>Email</th>
             <th>Date RDV</th>
+            <th>Prochain entretien</th>
             <th>Actions</th>
           </tr></thead>
-          <tbody>${rows || '<tr><td colspan="10" style="text-align:center;color:#aaa;padding:20px">Aucun résultat</td></tr>'}</tbody>
+          <tbody>${rows || '<tr><td colspan="11" style="text-align:center;color:#aaa;padding:20px">Aucun résultat</td></tr>'}</tbody>
         </table>
         </div>
       </div>`;
@@ -1401,6 +1439,33 @@ function getLocCity(resNom) {
   const m = resNom.match(/-\s*(.+)$/); return m ? m[1].trim() : resNom;
 }
 
+// ===================== UTILITAIRES ÉCHÉANCES & TRI =====================
+
+/**
+ * Retourne { label, cssClass, jours } pour une date d'échéance
+ * Rouge  : date dépassée ou dans moins de 30 jours
+ * Orange : dans 30-60 jours
+ * Vert   : dans plus de 60 jours
+ * Gris   : pas de date
+ */
+function echeanceInfo(dateStr) {
+  if (!dateStr) return { label: '—', cssClass: '', jours: null };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const jours = Math.round((d - today) / 86400000);
+  const label = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  if (jours < 0)  return { label, cssClass: 'echeance-late',  badgeClass: 'badge-late',  jours, txt: `En retard de ${-jours}j` };
+  if (jours <= 30) return { label, cssClass: 'echeance-late',  badgeClass: 'badge-late',  jours, txt: `Dans ${jours}j ⚠️` };
+  if (jours <= 60) return { label, cssClass: 'echeance-warn',  badgeClass: 'badge-warn',  jours, txt: `Dans ${jours}j` };
+  return { label, cssClass: 'echeance-ok', badgeClass: 'badge-ok', jours, txt: `Dans ${jours}j` };
+}
+
+function echeanceBadge(dateStr) {
+  if (!dateStr) return '<span style="color:#ccc">—</span>';
+  const e = echeanceInfo(dateStr);
+  return `<span class="${e.badgeClass}" title="${e.txt}">${e.label}</span>`;
+}
+
 function renderLocatairesTable() {
   initLocModalSelects();
   const q = (document.getElementById('locSearchInput')?.value || '').toLowerCase();
@@ -1413,6 +1478,22 @@ function renderLocatairesTable() {
       if (!hay.includes(q)) return false;
     }
     return true;
+  });
+
+  // ── Tri ──────────────────────────────────────────────────────────────────
+  const sortBy = document.getElementById('locSortBy')?.value || 'nom';
+  filtered.sort((a, b) => {
+    if (sortBy === 'nom')           return (a.nom||'').localeCompare(b.nom||'');
+    if (sortBy === 'nom_desc')      return (b.nom||'').localeCompare(a.nom||'');
+    if (sortBy === 'res')           return (a._resNom||'').localeCompare(b._resNom||'');
+    if (sortBy === 'entretien_asc') return ((a.dateProchainEntretien||'9999') < (b.dateProchainEntretien||'9999') ? -1 : 1);
+    if (sortBy === 'entretien_desc')return ((a.dateProchainEntretien||'') > (b.dateProchainEntretien||'') ? -1 : 1);
+    if (sortBy === 'statut') {
+      const ka = `r${a._resIdx}_l${a._locIdx}`, kb = `r${b._resIdx}_l${b._locIdx}`;
+      const da = dbData[ka]?.done ? 1 : 0, db2 = dbData[kb]?.done ? 1 : 0;
+      return da - db2;
+    }
+    return 0;
   });
 
   const cont = document.getElementById('locatairesTableContainer');
@@ -1475,6 +1556,7 @@ function renderLocatairesTable() {
       <td><span class="chaudiere-badge" style="font-size:11px">${chaud}</span></td>
       <td style="font-size:12px">${tel}<br>${email}</td>
       <td style="text-align:center;font-size:13px;font-weight:600;color:var(--primary)">${intervCount}</td>
+      <td style="white-space:nowrap">${echeanceBadge(loc.dateProchainEntretien)}</td>
       <td class="suivi-cell">
         ${buildSuiviCell(loc)}
       </td>
@@ -1494,6 +1576,7 @@ function renderLocatairesTable() {
       <th>CHAUDIÈRE</th>
       <th>CONTACT</th>
       <th style="text-align:center">INTERVENTIONS</th>
+      <th>PROCHAIN ENTRETIEN</th>
       <th>SUIVI CONTACT</th>
       <th>STATUT ENTRETIEN</th>
       <th></th>
@@ -1848,8 +1931,15 @@ function renderInterventionsTable() {
     return true;
   });
 
-  // Tri par date décroissante
-  entries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  // Tri configurable
+  const intervSort = document.getElementById('intervSortBy')?.value || 'date_desc';
+  entries.sort((a, b) => {
+    if (intervSort === 'date_desc') return (b.date||'').localeCompare(a.date||'');
+    if (intervSort === 'date_asc')  return (a.date||'').localeCompare(b.date||'');
+    if (intervSort === 'nom')       return (a.locNom||'').localeCompare(b.locNom||'');
+    if (intervSort === 'resultat')  return (a.resultat||'').localeCompare(b.resultat||'');
+    return 0;
+  });
 
   const statsCont = document.getElementById('intervStatsContainer');
   const cont = document.getElementById('interventionsTableContainer');
@@ -2194,12 +2284,20 @@ const VMC_RESULTAT_COLORS = { ok:'#d5f5e3', nok:'#fdebd0', rappel:'#d6eaf8', '':
 
 function renderVmcTable() {
   const cont = document.getElementById('vmcContainer');
-  const entries = Object.entries(vmcData).map(([k,v])=>({...v,_key:k}));
+  let entries = Object.entries(vmcData).map(([k,v])=>({...v,_key:k}));
 
   if (!entries.length) {
     cont.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px">Aucune fiche VMC. Cliquez sur "Ajouter fiche VMC" pour commencer.</p>';
     return;
   }
+
+  // Tri
+  const vmcSort = document.getElementById('vmcSortBy')?.value || 'res';
+  entries.sort((a, b) => {
+    if (vmcSort === 'prochain_asc')  return ((a.dateProchain||'9999') < (b.dateProchain||'9999') ? -1 : 1);
+    if (vmcSort === 'prochain_desc') return ((a.dateProchain||'') > (b.dateProchain||'') ? -1 : 1);
+    return (a.resNom||'').localeCompare(b.resNom||'');
+  });
 
   // Group by residence
   const byRes = {};
@@ -2238,9 +2336,9 @@ function renderVmcTable() {
         <td style="font-weight:600">${d.emplacement || '—'}</td>
         <td>${d.marque || '—'}</td>
         <td style="font-size:11px;color:#666">${d.serie || '—'}</td>
-        <td style="white-space:nowrap">${d.dateDernier || '—'}</td>
-        <td style="white-space:nowrap;font-weight:600;color:var(--primary)">${d.date2026 || '—'}</td>
-        <td style="white-space:nowrap">${d.dateProchain || '—'}</td>
+        <td style="white-space:nowrap">${d.dateDernier ? new Date(d.dateDernier).toLocaleDateString('fr-FR') : '—'}</td>
+        <td style="white-space:nowrap">${echeanceBadge(d.date2026)}</td>
+        <td style="white-space:nowrap">${echeanceBadge(d.dateProchain)}</td>
         <td style="font-size:12px">${d.technicien || '—'}</td>
         <td><span style="background:${resBg};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${resLabel}</span></td>
         <td style="font-size:12px;color:#666;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.notes || '—'}</td>
