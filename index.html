@@ -138,7 +138,7 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
 .progress-bar{background:#eee;border-radius:10px;height:10px;overflow:hidden;margin-top:8px}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--success),#2ecc71);border-radius:10px;transition:width .5s}
 .res-progress-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.res-progress-item{background:var(--white);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+.res-progress-item{background:var(--white);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .2s,transform .15s}.res-progress-item:hover{box-shadow:0 4px 16px rgba(26,82,118,.18);transform:translateY(-2px)}
 .res-progress-item h4{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:8px}
 .res-progress-item .nums{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px}
 /* MODAL */
@@ -202,6 +202,7 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
   <button class="tab-btn" onclick="showTab('locataires',this)">👤 Locataires</button>
   <button class="tab-btn" onclick="showTab('chaudieres',this)">🔥 Chaudières</button>
   <button class="tab-btn" onclick="showTab('interventions',this)">🔧 Interventions</button>
+  <button class="tab-btn" onclick="showTab('vmc',this)">💨 VMC Toiture</button>
 </div>
 
 <main>
@@ -294,6 +295,15 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
     <div id="intervStatsContainer" style="margin-bottom:16px"></div>
     <div id="interventionsTableContainer"></div>
   </div>
+
+  <!-- VMC TOITURE -->
+  <div id="tab-vmc" class="tab-panel">
+    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <h2 style="font-size:16px;font-weight:700;color:var(--primary)">💨 Entretien VMC – Toiture</h2>
+      <button class="btn-add" onclick="openVmcModal()">➕ Ajouter fiche VMC</button>
+    </div>
+    <div id="vmcContainer"></div>
+  </div>
 </main>
 </div>
 
@@ -373,6 +383,20 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
       <input type="date" id="locDateEntree">
     </div>
 
+    <!-- Ligne 5: Dates entretien chaudière -->
+    <div class="form-field">
+      <label>DATE ENTRETIEN PRÉCÉDENT</label>
+      <input type="date" id="locDateEntretienPrec">
+    </div>
+    <div class="form-field">
+      <label>DATE ENTRETIEN 2026</label>
+      <input type="date" id="locDateEntretien2026">
+    </div>
+    <div class="form-field full">
+      <label>DATE PROCHAIN ENTRETIEN (PRÉVU)</label>
+      <input type="date" id="locDateProchainEntretien">
+    </div>
+
     <!-- Champs cachés pour localisation précise -->
     <div class="form-field" style="display:none"><input type="text" id="locRef"></div>
     <div class="form-field" style="display:none"><input type="text" id="locBat"></div>
@@ -444,6 +468,67 @@ tr.todo td:first-child{border-left:3px solid var(--border)}
   <div class="modal-btns">
     <button class="btn-cancel" onclick="closeChaudModal()">Annuler</button>
     <button class="btn-primary" onclick="saveChaudiere()">Enregistrer</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL VMC -->
+<div class="modal-overlay" id="vmcModalOverlay">
+<div class="modal modal-lg" style="max-width:680px;width:96%">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h3 id="vmcModalTitle" style="margin-bottom:0">💨 Nouvelle fiche VMC</h3>
+    <button onclick="closeVmcModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;padding:4px 8px">✕</button>
+  </div>
+  <div class="loc-modal-grid">
+    <div class="form-field">
+      <label>RÉSIDENCE *</label>
+      <select id="vmcResIdx"></select>
+    </div>
+    <div class="form-field">
+      <label>EMPLACEMENT (TOITURE)</label>
+      <input type="text" id="vmcEmplacement" placeholder="Ex: Toiture Bât A, centrale VMC nord">
+    </div>
+    <div class="form-field">
+      <label>MARQUE / MODÈLE</label>
+      <input type="text" id="vmcMarque" placeholder="Ex: Atlantic, Aldes...">
+    </div>
+    <div class="form-field">
+      <label>N° DE SÉRIE</label>
+      <input type="text" id="vmcSerie" placeholder="">
+    </div>
+    <div class="form-field">
+      <label>DATE DERNIER ENTRETIEN</label>
+      <input type="date" id="vmcDateDernier">
+    </div>
+    <div class="form-field">
+      <label>DATE ENTRETIEN 2026</label>
+      <input type="date" id="vmcDate2026">
+    </div>
+    <div class="form-field full">
+      <label>DATE PROCHAIN ENTRETIEN (PRÉVU)</label>
+      <input type="date" id="vmcDateProchain">
+    </div>
+    <div class="form-field">
+      <label>TECHNICIEN / SOCIÉTÉ</label>
+      <input type="text" id="vmcTechnicien" placeholder="Ex: SANIT.CLIMAT">
+    </div>
+    <div class="form-field">
+      <label>RÉSULTAT</label>
+      <select id="vmcResultat">
+        <option value="">—</option>
+        <option value="ok">✅ Conforme</option>
+        <option value="nok">⚠️ Non conforme</option>
+        <option value="rappel">📅 Rappel nécessaire</option>
+      </select>
+    </div>
+    <div class="form-field full">
+      <label>OBSERVATIONS</label>
+      <textarea id="vmcNotes" placeholder="Notes, travaux effectués, pièces remplacées..." style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;resize:vertical;min-height:80px;outline:none;font-family:inherit;transition:border .2s" onfocus="this.style.borderColor='var(--secondary)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeVmcModal()">Annuler</button>
+    <button class="btn-primary" onclick="saveVmc()">Enregistrer</button>
   </div>
 </div>
 </div>
@@ -555,6 +640,7 @@ auth.onAuthStateChanged(user => {
     startListeningLocOverrides();
     startListeningInterventions();
     startListeningChaudieres();
+    startListeningVmc();
   } else {
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appScreen').style.display = 'none';
@@ -631,11 +717,36 @@ function renderDashboard() {
     const p = t > 0 ? Math.round(d / t * 100) : 0;
     const div = document.createElement('div');
     div.className = 'res-progress-item';
-    div.innerHTML = `<h4>${res.nom}</h4>
+    div.title = `Voir la résidence ${res.nom}`;
+    div.onclick = () => goToResidence(ri);
+    div.innerHTML = `<h4 style="display:flex;align-items:center;justify-content:space-between">${res.nom}<span style="font-size:11px;font-weight:500;color:#94a3b8;letter-spacing:.3px">Ouvrir →</span></h4>
       <div class="nums"><span>${d} / ${t} logements</span><span><b>${p}%</b></span></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${p}%"></div></div>`;
     cont.appendChild(div);
   });
+}
+
+function goToResidence(ri) {
+  // Switch to résidences tab
+  const tabBtn = document.querySelector('.tab-btn[onclick*="residences"]');
+  showTab('residences', tabBtn);
+  // Wait for render then open the accordion at index ri
+  setTimeout(() => {
+    const accordionCont = document.getElementById('accordionContainer');
+    const headers = accordionCont.querySelectorAll('.res-header');
+    if (headers[ri]) {
+      // Close all first
+      accordionCont.querySelectorAll('.res-body').forEach(b => b.classList.remove('open'));
+      accordionCont.querySelectorAll('.chevron').forEach(c => c.style.transform = '');
+      // Open target
+      const body = headers[ri].nextElementSibling;
+      const chevron = headers[ri].querySelector('.chevron');
+      if (body) body.classList.add('open');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+      // Scroll to it
+      headers[ri].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 150);
 }
 
 function renderAccordion() {
@@ -777,6 +888,7 @@ window.showTab = function(tab, btn) {
   if (tab === 'locataires') renderLocatairesTable();
   if (tab === 'chaudieres') renderChaudieresTable();
   if (tab === 'interventions') renderInterventionsTable();
+  if (tab === 'vmc') renderVmcTable();
 }
 
 // ===================== ACTIONS =====================
@@ -987,6 +1099,9 @@ function fillLocForm(loc) {
   document.getElementById('locEmail').value = loc.email || '';
   document.getElementById('locAdresse').value = loc.adresse || '';
   document.getElementById('locDateEntree').value = loc.dateEntree || '';
+  document.getElementById('locDateEntretienPrec').value = loc.dateEntretienPrec || '';
+  document.getElementById('locDateEntretien2026').value = loc.dateEntretien2026 || '';
+  document.getElementById('locDateProchainEntretien').value = loc.dateProchainEntretien || '';
   document.getElementById('locNotes').value = loc.notes || '';
 }
 
@@ -1009,6 +1124,9 @@ function getLocFormData() {
     email: document.getElementById('locEmail').value.trim(),
     adresse: document.getElementById('locAdresse').value.trim(),
     dateEntree: document.getElementById('locDateEntree').value,
+    dateEntretienPrec: document.getElementById('locDateEntretienPrec').value,
+    dateEntretien2026: document.getElementById('locDateEntretien2026').value,
+    dateProchainEntretien: document.getElementById('locDateProchainEntretien').value,
     notes: document.getElementById('locNotes').value.trim(),
   };
 }
@@ -1261,6 +1379,7 @@ function renderLocatairesTable() {
           </div>
         </div>
       </td>
+      <td style="font-size:11px;color:#64748b;font-weight:600">${loc.ref || '—'}</td>
       <td>
         <div class="loc-res-name">${resShort}</div>
         <div class="loc-res-city">${city}</div>
@@ -1279,6 +1398,7 @@ function renderLocatairesTable() {
   cont.innerHTML = `<table class="loc-table">
     <thead><tr>
       <th>LOCATAIRE</th>
+      <th>RÉF.</th>
       <th>RÉSIDENCE</th>
       <th>APPARTEMENT</th>
       <th>CHAUDIÈRE</th>
@@ -1703,6 +1823,164 @@ function renderInterventionsTable() {
   html += `<p style="font-size:12px;color:#aaa;margin-top:8px;text-align:right">${entries.length} intervention(s)</p>`;
   cont.innerHTML = html;
 }
+
+
+// ===================== VMC =====================
+let vmcData = {};
+let vmcModalKey = null;
+
+function startListeningVmc() {
+  db.ref('lot1_vmc').on('value', snap => {
+    vmcData = snap.val() || {};
+    if (document.getElementById('tab-vmc').classList.contains('active')) renderVmcTable();
+  });
+}
+
+function openVmcModal(key) {
+  vmcModalKey = key || null;
+  const title = document.getElementById('vmcModalTitle');
+  // Init residence select
+  const sel = document.getElementById('vmcResIdx');
+  sel.innerHTML = RESIDENCES_DATA.map((r,i)=>`<option value="${i}">${r.nom}</option>`).join('');
+  if (key && vmcData[key]) {
+    const d = vmcData[key];
+    title.textContent = '💨 Modifier fiche VMC';
+    sel.value = d.resIdx ?? 0;
+    document.getElementById('vmcEmplacement').value = d.emplacement || '';
+    document.getElementById('vmcMarque').value = d.marque || '';
+    document.getElementById('vmcSerie').value = d.serie || '';
+    document.getElementById('vmcDateDernier').value = d.dateDernier || '';
+    document.getElementById('vmcDate2026').value = d.date2026 || '';
+    document.getElementById('vmcDateProchain').value = d.dateProchain || '';
+    document.getElementById('vmcTechnicien').value = d.technicien || '';
+    document.getElementById('vmcResultat').value = d.resultat || '';
+    document.getElementById('vmcNotes').value = d.notes || '';
+  } else {
+    title.textContent = '💨 Nouvelle fiche VMC';
+    document.getElementById('vmcEmplacement').value = '';
+    document.getElementById('vmcMarque').value = '';
+    document.getElementById('vmcSerie').value = '';
+    document.getElementById('vmcDateDernier').value = '';
+    document.getElementById('vmcDate2026').value = '';
+    document.getElementById('vmcDateProchain').value = '';
+    document.getElementById('vmcTechnicien').value = '';
+    document.getElementById('vmcResultat').value = '';
+    document.getElementById('vmcNotes').value = '';
+  }
+  document.getElementById('vmcModalOverlay').classList.add('open');
+}
+
+function closeVmcModal() {
+  document.getElementById('vmcModalOverlay').classList.remove('open');
+  vmcModalKey = null;
+}
+
+function saveVmc() {
+  const resIdx = parseInt(document.getElementById('vmcResIdx').value);
+  const resNom = RESIDENCES_DATA[resIdx]?.nom || '';
+  const data = {
+    resIdx,
+    resNom,
+    emplacement: document.getElementById('vmcEmplacement').value.trim(),
+    marque: document.getElementById('vmcMarque').value.trim(),
+    serie: document.getElementById('vmcSerie').value.trim(),
+    dateDernier: document.getElementById('vmcDateDernier').value,
+    date2026: document.getElementById('vmcDate2026').value,
+    dateProchain: document.getElementById('vmcDateProchain').value,
+    technicien: document.getElementById('vmcTechnicien').value.trim(),
+    resultat: document.getElementById('vmcResultat').value,
+    notes: document.getElementById('vmcNotes').value.trim(),
+    updatedAt: new Date().toISOString(),
+    updatedBy: currentUser?.email || ''
+  };
+  if (vmcModalKey) {
+    db.ref('lot1_vmc/' + vmcModalKey).update(data);
+    showToast('✅ Fiche VMC mise à jour !');
+  } else {
+    db.ref('lot1_vmc').push(data);
+    showToast('✅ Fiche VMC créée !');
+  }
+  closeVmcModal();
+}
+
+function deleteVmc(key) {
+  const d = vmcData[key];
+  const nom = d?.resNom || 'cette VMC';
+  if (confirm(`Supprimer la fiche VMC de "${nom}" ?`)) {
+    db.ref('lot1_vmc/' + key).remove();
+    showToast('🗑️ Fiche VMC supprimée.');
+  }
+}
+
+const VMC_RESULTAT_LABELS = { ok:'✅ Conforme', nok:'⚠️ Non conforme', rappel:'📅 Rappel', '':'—' };
+const VMC_RESULTAT_COLORS = { ok:'#d5f5e3', nok:'#fdebd0', rappel:'#d6eaf8', '':'#f9f9f9' };
+
+function renderVmcTable() {
+  const cont = document.getElementById('vmcContainer');
+  const entries = Object.entries(vmcData).map(([k,v])=>({...v,_key:k}));
+
+  if (!entries.length) {
+    cont.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px">Aucune fiche VMC. Cliquez sur "Ajouter fiche VMC" pour commencer.</p>';
+    return;
+  }
+
+  // Group by residence
+  const byRes = {};
+  entries.forEach(e => {
+    const rn = e.resNom || 'Résidence inconnue';
+    if (!byRes[rn]) byRes[rn] = [];
+    byRes[rn].push(e);
+  });
+
+  let html = '';
+  Object.entries(byRes).forEach(([resNom, items]) => {
+    html += `<div class="res-accordion" style="margin-bottom:16px">
+      <div class="res-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.chevron').style.transform=this.nextElementSibling.classList.contains('open')?'rotate(180deg)':'rotate(0deg)'">
+        <span class="res-title">💨 ${resNom}</span>
+        <span class="res-count">${items.length} VMC</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="res-body open">
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Emplacement</th>
+            <th>Marque / Modèle</th>
+            <th>N° Série</th>
+            <th>Dernier entretien</th>
+            <th>Entretien 2026</th>
+            <th>Prochain entretien</th>
+            <th>Technicien</th>
+            <th>Résultat</th>
+            <th>Observations</th>
+            <th style="width:80px">Actions</th>
+          </tr></thead><tbody>`;
+    items.forEach(d => {
+      const resBg = VMC_RESULTAT_COLORS[d.resultat] || '#f9f9f9';
+      const resLabel = VMC_RESULTAT_LABELS[d.resultat] || '—';
+      html += `<tr>
+        <td style="font-weight:600">${d.emplacement || '—'}</td>
+        <td>${d.marque || '—'}</td>
+        <td style="font-size:11px;color:#666">${d.serie || '—'}</td>
+        <td style="white-space:nowrap">${d.dateDernier || '—'}</td>
+        <td style="white-space:nowrap;font-weight:600;color:var(--primary)">${d.date2026 || '—'}</td>
+        <td style="white-space:nowrap">${d.dateProchain || '—'}</td>
+        <td style="font-size:12px">${d.technicien || '—'}</td>
+        <td><span style="background:${resBg};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">${resLabel}</span></td>
+        <td style="font-size:12px;color:#666;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.notes || '—'}</td>
+        <td>
+          <button class="btn-sm btn-edit" onclick="openVmcModal('${d._key}')" title="Modifier">✏️</button>
+          <button class="btn-sm btn-delete" onclick="deleteVmc('${d._key}')" title="Supprimer" style="margin-left:4px">🗑️</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table></div></div></div>`;
+  });
+  cont.innerHTML = html;
+}
+
+document.getElementById('vmcModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeVmcModal();
+});
 
 // Close modal on overlay click
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
